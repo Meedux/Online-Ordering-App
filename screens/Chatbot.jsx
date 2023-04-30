@@ -1,5 +1,5 @@
 import React, {useState, useEffect,} from 'react';
-import {Dialogflow_V2} from 'react-native-dialogflow';
+import { Dialogflow_V2 } from 'react-native-dialogflow';
 import { dialogConfig } from '../app/env';
 import {View, Text} from 'react-native';
 import {

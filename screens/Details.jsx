@@ -1,64 +1,103 @@
-import React, { useContext } from 'react'
-import { Text, View, Image, ScrollView } from 'react-native'
-import { Button } from '@rneui/themed'
-import { useRoute } from '@react-navigation/native'
-import { addToCart, auth } from '../app/firebase'
-import { AppContext } from '../components/Context'
+import React, { useContext } from 'react';
+import { View, Text, Image, ScrollView } from 'react-native';
+import { Button } from '@rneui/themed';
+import { useRoute } from '@react-navigation/native';
+import { addToCart, auth } from '../app/firebase';
+import { AppContext } from '../components/Context';
 
 const Details = () => {
-    const route = useRoute()
-    const { cart, setCart } = useContext(AppContext)
-  return (
-    <>
-        <ScrollView>
-            <View style={{
-                flex: 1,
-                alignItems: 'center',
-                justifyContent: 'center',
-                marginTop: 20,
-            }}>
-                <Image source={{
-                    uri: route?.params.product.img
-                }} style={{
-                    width: 200,
-                    height: 200,
-                    borderRadius: 100,
-                }} />
-                <Text style={{
-                    fontSize: 20,
-                    fontWeight: 'bold',
-                    marginTop: 10,
-                }}>
-                    {route?.params.product.name}
-                </Text>
-                <Text style={{
-                    color: 'green',
-                    marginBottom: 10,
-                }}>
-                    {route?.params.product.price}
-                </Text>
-                <Text style={{
-                    marginHorizontal: 30,
-                    marginBottom: 30,
-                }}>
-                    {route?.params.product.long_description}
-                </Text>
-                <Button
-                    onPress={() => {
-                        addToCart(auth.currentUser.uid, route?.params.product)
-                        setCart([...cart, route?.params.product])
-                    }}
-                    style={{
-                        marginTop: 10,
-                        marginBottom: 30,
-                    }}
-                >
-                    Add to cart
-                </Button>
-            </View>
-        </ScrollView>
-    </>
-  )
-}
+  const route = useRoute();
+  const { cart, setCart } = useContext(AppContext);
 
-export default Details
+  const handleAddToCart = () => {
+    addToCart(auth.currentUser.uid, route?.params.product);
+    setCart([...cart, route?.params.product]);
+  };
+
+  return (
+    <ScrollView style={styles.container}>
+      <View style={styles.imageContainer}>
+        <Image
+          source={{ uri: route?.params.product.img }}
+          style={styles.image}
+        />
+      </View>
+      <View style={styles.detailsContainer}>
+        <Text style={styles.title}>{route?.params.product.name}</Text>
+        <Text style={styles.price}>{route?.params.product.price}</Text>
+        <Text style={styles.description}>
+          {route?.params.product.long_description}
+        </Text>
+        <Button style={styles.button} onPress={handleAddToCart}>
+          Add to Cart
+        </Button>
+      </View>
+    </ScrollView>
+  );
+};
+
+const styles = {
+  container: {
+    flex: 1,
+    backgroundColor: '#f5f5f5',
+  },
+  imageContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#ffffff',
+    height: 300,
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.5,
+    shadowRadius: 3,
+    elevation: 5,
+  },
+  image: {
+    width: 250,
+    height: 250,
+    resizeMode: 'contain',
+  },
+  detailsContainer: {
+    flex: 1,
+    marginTop: -40,
+    backgroundColor: '#ffffff',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    paddingHorizontal: 20,
+    paddingTop: 40,
+    paddingBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.5,
+    shadowRadius: 3,
+    elevation: 5,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 10,
+  },
+  price: {
+    color: '#FF6C00',
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 20,
+  },
+  description: {
+    fontSize: 16,
+    marginBottom: 20,
+    lineHeight: 24,
+  },
+  button: {
+    backgroundColor: '#FF6C00',
+    borderRadius: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+  },
+};
+
+export default Details;

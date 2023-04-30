@@ -8,6 +8,10 @@ import {
   getFirestore, collection, getDocs, addDoc, updateDoc, getDoc, doc
 } from 'firebase/firestore'
 
+import {
+  getStorage, ref, getDownloadURL, uploadBytes
+} from 'firebase/storage'
+
 const firebaseConfig = {
   apiKey: "AIzaSyACMIgVBU9hZzgJhoE6hPxWHWpBJAAa8v8",
   authDomain: "whey-factory.firebaseapp.com",
@@ -20,12 +24,15 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const db = getFirestore(app);
+export const storage = getStorage(app);
 
 const usersRef = collection(db, 'users');
 const productsRef = collection(db, 'products');
 const ordersRef = collection(db, 'orders');
 const transactionRef = collection(db, 'transactions');
 const categoriesRef = collection(db, 'categories');
+
+const storageRef = ref(storage, 'orders');
 
 
 export const getAllCategories = async (setCategories) => {
@@ -143,7 +150,6 @@ export const clearCart = async (id, setCart) => {
   user.cart = [];
   await updateDoc(userRef, user);
   setCart(user.cart);
-  alert('Successfully Ordered!');
 }
 
 export const getCartItems = async (id, setCart) => {
@@ -162,7 +168,7 @@ export const getCartItems = async (id, setCart) => {
   });
 }
 
-export const checkout = async (id, orders, setOrders, order) => {
+export const checkout = async (id, orders, setOrders, order, file) => {
   // Get user id then check if the cart is empty or not
   const querySnapshot = await getDocs(usersRef);
   const user = {};
@@ -200,10 +206,13 @@ export const checkout = async (id, orders, setOrders, order) => {
   //   totalPrice: 0,
   // }
 
+
+
   order.userId = user.id;
   order.date = today;
   order.products = user.cart;
   order.totalPrice = 0;
+  order.status = 'pending';
 
   // Calculate the total price
   user.cart.forEach((item) => {
@@ -216,7 +225,42 @@ export const checkout = async (id, orders, setOrders, order) => {
 
   // Update the orders context
   setOrders([...orders, order]);
-  
+
+  // Clear the cart
+  user.cart = [];
+  await updateDoc(userRef, user);
+
+
+  // get the order id
+  const querySnapshot2 = await getDocs(ordersRef);
+  let orderId = null;
+
+  querySnapshot2.forEach((doc) => {
+    if (doc.data().userId === user.id) {
+      orderId = doc.id;
+    }
+  });
+
+
+  const uri = await fetch(file.assets[0].uri);
+  const blob = await uri.blob();
+
+
+  const metadata = {
+    contentType: 'image/jpeg',
+  };
+
+  // Upload the file
+  const storageRef = ref(storage, `orders/${orderId}.jpg`);
+  await uploadBytes(storageRef, blob, metadata);
+  alert('Successfully Ordered! now awaiting confirmation');
+
+  // Get the image url and update the new order with the imgURL field
+  const url = await getDownloadURL(storageRef);
+  await updateDoc(doc(ordersRef, orderId), {
+    imgURL: url,
+  });
+
 }
 
 export const getOrdersById = async (id, setOrders, setPrice) => {
@@ -322,7 +366,7 @@ export const logout = (navigation) => {
 
 onAuthStateChanged(auth, (user) => {
   if (user) {
-    currentUser = user;
+    
     // ...
   } else {
     // User is signed out

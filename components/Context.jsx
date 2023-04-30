@@ -13,6 +13,12 @@ const Context = ({ children }) => {
     const [ ordersCount, setOrdersCount ] = useState(0)
     const [ cartCount, setCartCount ] = useState(0)
 
+    const [ category, setCategory ] = useState('')
+
+    function filterProductsByCategory(category) {
+        return products.filter(product => product.category === category)
+    }
+
     useEffect(() => {
         onAuthStateChanged(auth, (user) => {
             if (user) {
@@ -40,7 +46,10 @@ const Context = ({ children }) => {
             orders,
             setOrders,
             totalPrice,
-            setPrice
+            setPrice,
+            filterProductsByCategory,
+            category,
+            setCategory,
         }
     }>
         {children}

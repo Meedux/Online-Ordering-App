@@ -24,14 +24,15 @@ const Profile = () => {
                     flex: 1,
                     alignItems: 'center',
                     justifyContent: 'center',
+                    marginBottom: 30,
                 }}>
-                    {/* <Image source={{
-                    uri: auth.currentUser.photoURL
+                    <Image source={{
+                        uri: 'https://wheyfactoryph.shop/public/assets/uploads/category/1680263166.jpeg',
                     }} style={{
-                    width: 150,
-                    height: 150,
-                    borderRadius: 100,
-                    }} /> */}
+                        width: 200,
+                        height: 200,
+                        borderRadius: 100,
+                    }} />
                 </View>
 
                 <View style={{
@@ -75,7 +76,9 @@ const Profile = () => {
                 </View>
             </View>
 
-            {/* Logout Button */}
+        </ScrollView>
+        {/* Logout Button */}
+        <View>
             <Button
                 title="Logout"
                 onPress={logout}
@@ -84,9 +87,11 @@ const Profile = () => {
                     borderRadius: 15,
                     marginHorizontal: 30,
                     marginTop: 100,
+                    width: '80%',
+                    display: 'inline-block',
                 }}
             />
-        </ScrollView>
+        </View>
     </>
   )
 }
@@ -119,6 +124,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         marginHorizontal: 10,
+        marginTop: 40,
         width: '100%',
     }
 })

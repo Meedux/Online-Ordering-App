@@ -16,6 +16,8 @@ import Orders from '../screens/Orders'
 import Cart from '../screens/Cart'
 import Details from '../screens/Details'
 import Checkout from '../screens/Checkout'
+import Items from '../screens/Items'
+import Support from '../screens/Chatbot'
 
 const Tab = createBottomTabNavigator()
 
@@ -75,6 +77,14 @@ const Navibar = () => {
                                     <Icon size={20} type='material' name='person' />
                                 )
                             }} name="Profile" component={Profile} />
+                            <Tab.Screen options={{
+                                title: 'Support',
+                                headerShown: false,
+                                tabBarIcon: () => (
+                                    <Icon size={20} type='material' name='person' />
+                                )
+                            }} name="Support" component={Support} />
+                            
                             
                             <Tab.Screen options={{
                                 title: 'Details',
@@ -92,6 +102,14 @@ const Navibar = () => {
                                     <Icon size={20} type='material' name='person' />
                                 )
                             }} name="Checkout" component={Checkout} />
+                            <Tab.Screen options={{
+                                title: 'Items',
+                                headerShown: false,
+                                tabBarButton: (props) => null,
+                                tabBarIcon: () => (
+                                    <Icon size={20} type='material' name='person' />
+                                )
+                            }} name="Items" component={Items} />
                         </>
                     ) : (
                         <>

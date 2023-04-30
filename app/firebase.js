@@ -28,6 +28,16 @@ const transactionRef = collection(db, 'transactions');
 const categoriesRef = collection(db, 'categories');
 
 
+export const getAllCategories = async (setCategories) => {
+  const querySnapshot = await getDocs(categoriesRef);
+  const categories = [];
+
+  querySnapshot.forEach((doc) => {
+    categories.push(doc.data());
+  });
+
+  setCategories(categories);
+}
 
 export const getAllOrdersById = async (id) => {
   const querySnapshot = await getDocs(ordersRef);

@@ -1,6 +1,6 @@
 import React from 'react'
-import { Text, View, ScrollView, Image } from 'react-native'
-import { Button, Card, Icon, Input, ListItem } from '@rneui/themed'
+import { Text, View, ScrollView, Image, Button } from 'react-native'
+import { Card, Icon, Input, ListItem } from '@rneui/themed'
 import { useState, useContext } from 'react'
 import { AppContext } from '../components/Context'
 import { checkout, auth, clearCart } from '../app/firebase'
@@ -12,7 +12,6 @@ const Checkout = ({ navigation }) => {
 
   const [ name, setName ] = useState('')
   const [ email, setEmail ] = useState('')
-  const [ paymentMethod, setPaymentMethod ] = useState('')
 
   return (
     <>
@@ -94,28 +93,32 @@ const Checkout = ({ navigation }) => {
               </View>
             </Card>
 
-            {/* Checkout Button */}
-            <View style={{
-              marginHorizontal: 80,
-              marginTop: 50,
-
-            }}>
-              <Button
-                title="Checkout"
-                onPress={() => {
-                  const order = {
-                    name: name,
-                    email: email,
-                    paymentMethod: (checked == 0) ? 'BPI' : 'Gcash',
-                  }
-                  checkout(auth.currentUser.uid, orders, setOrders, order)
-                  clearCart(auth.currentUser.uid, setCart)
-                  navigation.navigate('Orders')
-                }}
-              />  
-            </View>
               
           </ScrollView>
+          {/* Checkout Button */}
+          <View>
+            <Button
+              title="Checkout"
+              onPress={() => {
+                const order = {
+                  name: name,
+                  email: email,
+                  paymentMethod: (checked == 0) ? 'BPI' : 'Gcash',
+                }
+                checkout(auth.currentUser.uid, orders, setOrders, order)
+                clearCart(auth.currentUser.uid, setCart)
+                navigation.navigate('Orders')
+              }}
+              style={{
+                paddingHorizontal: 10,
+                  borderRadius: 15,
+                  marginHorizontal: 30,
+                  marginTop: 100,
+                  width: '80%',
+                  display: 'inline-block',
+              }}
+            />  
+          </View>
     </>
   )
 }

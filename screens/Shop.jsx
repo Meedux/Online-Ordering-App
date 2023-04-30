@@ -1,24 +1,27 @@
-import React, { useEffect, useState } from 'react'
-import { Text, View, ScrollView, StyleSheet, TouchableOpacity } from 'react-native'
-import { getAllProducts } from '../app/firebase'
-import { Card, Image } from '@rneui/base'
+import React, { useState, useEffect, useContext } from 'react'
+import { getAllCategories } from '../app/firebase'
+import { Card, Image} from '@rneui/base'
+import { ScrollView, TouchableOpacity, StyleSheet, View, Text } from 'react-native'
+import { AppContext } from '../components/Context'
 
 
 const Shop = ({ navigation }) => {
-  const [ products, setProducts ] = useState([])
+    const [ categories, setCategories ] = useState([])
+    const { setCategory } = useContext(AppContext)
 
-  useEffect(() => {
-    getAllProducts(setProducts)
-  }, [])
+    useEffect(() => {
+        getAllCategories(setCategories)
+    }, [])
 
   return (
     <>
         <ScrollView>
-            {
-                products.map((product, index) => (
+        {
+                categories.map((category, index) => (
                   <TouchableOpacity key={index} onPress={() => {
-                    navigation.navigate('Details', {
-                      product: product,
+                    setCategory(category.name)
+                    navigation.navigate('Items', {
+                      category: category,
                     })
                   }}>
                     <Card  style={{
@@ -28,27 +31,19 @@ const Shop = ({ navigation }) => {
                         marginBottom: 30,
                     }}>
                             <View style={styles.container}>
-                              <Card.Title>
-                                  {product.name}
-                              </Card.Title>
                               <Image source={{
-                                uri: product.img,
-                              }} style={{
-                                width: 200,
-                                height: 200,
-                                borderRadius: 100,
+                                  uri: category?.img,
+                                }} style={{
+                                    width: 200,
+                                    height: 200,
+                                    borderRadius: 100,
+                                    marginBottom: 30,
                               }} />
                             </View>
                             <Card.Divider />
-                            <Text style={{
-                              color: 'green',
-                              marginBottom: 10,
-                            }}>
-                              {product.price}
-                            </Text>
-                            <Text>
-                              {product.short_description}                  
-                            </Text>
+                            <Card.Title>
+                                {category?.name}
+                            </Card.Title>
                     </Card>
                   </TouchableOpacity>
                 ))
@@ -58,7 +53,6 @@ const Shop = ({ navigation }) => {
     </>
   )
 }
-
 const styles = StyleSheet.create({
     container: {
       flex: 1,

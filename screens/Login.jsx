@@ -1,14 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Input, Button } from '@rneui/themed';
 import { login } from '../app/firebase';
+import { AppContext } from '../components/Context';
 
 const Login = ({ navigation }) => {
-    const [email, setEmail] = useState('');
+    const { setEmail } = useContext(AppContext);
+    const [email, setInputEmail] = useState('');
     const [password, setPassword] = useState('');
 
     const handleLogin = (e) => {
-        login(email, password);
+        login(email, password, navigation, setEmail);
     };
 
   return (
@@ -18,7 +20,7 @@ const Login = ({ navigation }) => {
                 placeholder="Email Address"
                 leftIcon={{ type: 'material', name: 'email' }}
                 value={email}
-                onChangeText={(value) => setEmail(value)}
+                onChangeText={(value) => setInputEmail(value)}
             />
             <Input
                 placeholder="Password"

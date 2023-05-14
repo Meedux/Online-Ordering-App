@@ -1,11 +1,13 @@
 import React, { useState, createContext, useEffect } from 'react'
 import { getAllProducts, getCartItems,auth } from '../app/firebase'
 import { onAuthStateChanged } from 'firebase/auth'
-import { getOrdersById } from '../app/firebase'
+import { getOrdersById, getUserIdByEmail } from '../app/firebase'
 
 export const AppContext = createContext()
 
 const Context = ({ children }) => {
+    const [ id, setId ] = useState(null)
+    const [email, setEmail] = useState('')
     const [products, setProducts] = useState([])
     const [cart, setCart] = useState([])
     const [orders, setOrders] = useState([])
@@ -15,18 +17,26 @@ const Context = ({ children }) => {
 
     const [ category, setCategory ] = useState('')
 
-    function filterProductsByCategory(category) {
-        return products.filter(product => product.category === category)
+    function filterProductsByCategory(id) {
+        return products.filter(product => product.cate_id === id)
     }
 
+    
     useEffect(() => {
         onAuthStateChanged(auth, (user) => {
             if (user) {
-                getCartItems(user.uid, setCart, setPrice)
+                getUserIdByEmail(user.email, setId)
+                
+                getCartItems(id, setCart, setPrice)
+
                 getAllProducts(setProducts)
-                getOrdersById(user.uid, setOrders, setPrice)
-                setCartCount(cart.length)
-                setOrdersCount(orders.length)
+
+                // Update this
+                getOrdersById(id, setOrders, setPrice)
+
+                // ???
+                setCartCount(cart?.length)
+                setOrdersCount(orders?.length)
             } else {
                 setCart([])
                 setProducts([])
@@ -39,6 +49,7 @@ const Context = ({ children }) => {
   return (
     <AppContext.Provider value={
         {
+            email,
             products,
             setProducts,
             cart,
@@ -50,6 +61,11 @@ const Context = ({ children }) => {
             filterProductsByCategory,
             category,
             setCategory,
+            setEmail,
+            ordersCount,
+            cartCount,
+            id,
+            setPrice
         }
     }>
         {children}

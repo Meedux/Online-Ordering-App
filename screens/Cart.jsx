@@ -1,11 +1,29 @@
-import React, { useContext } from 'react';
-import { ScrollView, View, Text, Image } from 'react-native';
+import React, { useContext, useState, useEffect } from 'react';
+import { ScrollView, View, Text, Image, RefreshControl } from 'react-native';
 import { Button, Card, Icon } from '@rneui/base';
 import { AppContext } from '../components/Context';
-import { removeFromCart, auth } from '../app/firebase';
+import { removeFromCart, auth, getCartItems } from '../app/firebase';
 
 const Cart = ({ navigation }) => {
-  const { cart, setCart } = useContext(AppContext);
+  const { cart, setCart, id, setPrice, totalPrice } = useContext(AppContext);
+
+  const [refreshing, setRefreshing] = useState(false);
+
+  useEffect(() => {
+    getCartItems(id, setCart, setPrice);
+  }, []);
+
+  const onRefresh = () => {
+    setRefreshing(true);
+
+    getCartItems(id, setCart, setPrice);
+
+    setRefreshing(false);
+  };
+  
+  const removeToCart = (prodId, price) => {
+    removeFromCart(id, prodId, setCart, cart, price, setPrice, totalPrice)
+  }
 
   const renderCartItems = () => {
     return cart.map((item, index) => (
@@ -14,23 +32,34 @@ const Cart = ({ navigation }) => {
         <View style={{ flex: 1 }}>
           <Text style={{ fontSize: 16, fontWeight: 'bold', marginBottom: 5 }}>{item.name}</Text>
           <Text style={{ color: 'gray', marginBottom: 5 }}>{item.description}</Text>
-          <Text style={{ fontSize: 16, fontWeight: 'bold', color: 'green' }}>{item.price}</Text>
+          <Text style={{ fontSize: 16, fontWeight: 'bold', color: 'green' }}>{item.selling_price}</Text>
+          
         </View>
         <Button
           title="Remove"
           type="clear"
-          onPress={() => removeFromCart(auth.currentUser.uid, item, setCart)}
+          onPress={() => removeToCart(item.id, item.selling_price)}
         />
+        <Card.Divider />
       </View>
     ));
   };
 
   return (
-    <ScrollView contentContainerStyle={{ padding: 20 }}>
+    <ScrollView contentContainerStyle={{ padding: 20 }} refreshControl={ <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}>
       <Card containerStyle={{ borderRadius: 10 }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10 }}>
           <Icon name="cart" type="material-community" />
           <Text style={{ fontSize: 24, marginLeft: 10 }}>Cart</Text>
+        </View>
+
+        <View style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          marginBottom: 10,
+        }}>
+          <Text style={{ fontSize: 24, marginLeft: 10 }}>Total Price: </Text>
+          <Text style={{ fontSize: 24, marginLeft: 10 }}>PHP {totalPrice}</Text>
         </View>
         <Card.Divider />
         {cart.length > 0 ? (
@@ -39,6 +68,7 @@ const Cart = ({ navigation }) => {
           <View style={{ alignItems: 'center' }}>
             <Text style={{ fontSize: 16, marginBottom: 10 }}>Your cart is empty</Text>
             <Button title="Shop now" onPress={() => navigation.navigate('Shop')} />
+            
           </View>
         )}
       </Card>

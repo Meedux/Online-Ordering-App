@@ -1,41 +1,57 @@
-import React, { useContext } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import React, { useContext, useState } from 'react';
+import { View, Text, StyleSheet, RefreshControl, ScrollView } from 'react-native';
 import { Table, Row, Rows } from 'react-native-table-component';
 import { AppContext } from '../components/Context';
 import { Card } from '@rneui/base';
+import { getOrdersById } from '../app/firebase';
+
 
 const Orders = () => {
-  const { orders, totalPrice } = useContext(AppContext);
+  const { orders, totalPrice, id, setOrders, setPrice } = useContext(AppContext);
 
-  const tableHead = ['Date', 'Total Price', 'Payment Method', 'Status'];
+  const [refreshing, setRefreshing] = useState(false);
+
+  const onRefresh = () => {
+    setRefreshing(true);
+
+    getOrdersById(id, setOrders, setPrice);
+
+    setRefreshing(false);
+
+  };
+
+  
+
+  const tableHead = ['Payment Method', 'Tracking Number', 'Total Price', 'Status'];
   const tableData = orders.map((order) => [
-    order.date,
-    order.totalPrice,
-    order.paymentMethod,
+    order.payment_method,
+    order.trackingNumber,
+    order.total_price,
     order.status,
   ]);
 
   return (
-    <Card style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.headerText}>Your Orders</Text>
-        <Text style={styles.totalPriceText}>Total Price: ${totalPrice}</Text>
-      </View>
-      <Table borderStyle={styles.tableBorder}>
-        <Row
-          data={tableHead}
-          style={styles.tableHead}
-          textStyle={styles.tableHeadText}
-        />
-        <Rows data={tableData} textStyle={styles.tableRowText} />
-      </Table>
-    </Card>
+    <ScrollView  refreshControl={ <RefreshControl refreshing={refreshing} onRefresh={onRefresh}/> }>
+      <Card style={styles.container}>
+        <View style={styles.header}>
+          <Text style={styles.headerText}>Your Orders</Text>
+        </View>
+        <Table borderStyle={styles.tableBorder}>
+          <Row
+            data={tableHead}
+            style={styles.tableHead}
+          />
+          <Rows data={tableData} style={styles.tableRowText} />
+        </Table>
+
+      </Card>
+    </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    marginTop: 50,
+    marginTop: 80,
     paddingHorizontal: 20,
     paddingBottom: 20,
     borderRadius: 10,
@@ -46,8 +62,8 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: 'column',
+    justifyContent: 'center',
     marginBottom: 20,
   },
   headerText: {
@@ -64,10 +80,11 @@ const styles = StyleSheet.create({
   tableHead: {
     height: 60,
     backgroundColor: '#f1f8ff',
-  },
-  tableHeadText: {
     textAlign: 'center',
     fontWeight: 'bold',
+  },
+  tableHeadText: {
+    
   },
   tableRowText: {
     textAlign: 'center',

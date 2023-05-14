@@ -7,10 +7,15 @@ import { AppContext } from '../components/Context';
 
 const Details = () => {
   const route = useRoute();
-  const { cart, setCart } = useContext(AppContext);
+  const { cart, setCart, id, setPrice, totalPrice } = useContext(AppContext);
 
   const handleAddToCart = () => {
-    addToCart(auth.currentUser.uid, route?.params.product);
+    const item = {
+      user_id: String(id),
+      prod_id: String(route?.params.product.id),
+      prod_qty: "1",
+    }
+    addToCart(route?.params.product.name, item, setPrice, totalPrice, Number(route?.params.product.selling_price));
     setCart([...cart, route?.params.product]);
   };
 
@@ -24,7 +29,7 @@ const Details = () => {
       </View>
       <View style={styles.detailsContainer}>
         <Text style={styles.title}>{route?.params.product.name}</Text>
-        <Text style={styles.price}>{route?.params.product.price}</Text>
+        <Text style={styles.price}>{route?.params.product.selling_price}</Text>
         <Text style={styles.description}>
           {route?.params.product.long_description}
         </Text>

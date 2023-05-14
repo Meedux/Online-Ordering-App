@@ -21,7 +21,8 @@ const Shop = ({ navigation }) => {
                   <TouchableOpacity key={index} onPress={() => {
                     setCategory(category.name)
                     navigation.navigate('Items', {
-                      category: category,
+                      name: category.name,
+                      id: category.id,
                     })
                   }}>
                     <Card  style={{

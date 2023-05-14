@@ -1,19 +1,42 @@
-import React, { useState } from 'react';
-import { View, StyleSheet } from 'react-native';
+import React, { useState, useContext } from 'react';
+import { View, StyleSheet, ScrollView } from 'react-native';
 import { Input, Button } from '@rneui/themed';
-import { register } from '../app/firebase';
+import { register, auth } from '../app/firebase';
+import { sendEmailVerification } from 'firebase/auth';
+import DateTimePicker from '@react-native-community/datetimepicker'
+import { AppContext } from '../components/Context';
 
 const Register = ({ navigation }) => {
+    const { setEmail } = useContext(AppContext);
     const [ firstName, setFirstName ] = useState('');
     const [ lastName, setLastName ] = useState('');
-    const [email, setEmail] = useState('');
+
+    // date of birth
+    const [date, setDate] = useState(new Date());
+    const [open, setOpen] = useState(false);
+
+    const [email, setInputEmail] = useState('');
     const [password, setPassword] = useState('');
     function handleRegister(){
-        const fullName = `${firstName} ${lastName}`
-        register(fullName, email, password)
+        const user = {
+            name: `${firstName} ${lastName}`,
+            lname: lastName,
+            email: email,
+            dob: date.toDateString(),
+            password: password,
+            password_confirmation: password,
+        }
+        register(user, navigation, setEmail)
     }
+
+    const onChange = (event, selectedDate) => {
+        const currentDate = selectedDate || date;
+        setOpen(false)
+        setDate(currentDate);
+    };
   return (
     <>
+        <ScrollView>
         <View style={styles.container}>
             <Input
                 placeholder="First Name"
@@ -27,11 +50,26 @@ const Register = ({ navigation }) => {
                 value={lastName}
                 onChangeText={(value) => setLastName(value)}
             />
+
+            <Button title="Set Date of Birth" onPress={() => setOpen(true)} />
+
+            {open && (
+                <DateTimePicker
+                    testID="dateTimePicker"
+                    value={date}
+                    mode={'date'}
+                    is24Hour={true}
+                    display="default"
+                    onChange={onChange}
+                />
+            
+            )}
+
             <Input
                 placeholder="Email Address"
                 leftIcon={{ type: 'material', name: 'email' }}
                 value={email}
-                onChangeText={(value) => setEmail(value)}
+                onChangeText={(value) => setInputEmail(value)}
             />
             <Input
                 placeholder="Password"
@@ -45,6 +83,7 @@ const Register = ({ navigation }) => {
                 onPress={handleRegister}
             />
         </View>
+        </ScrollView>
     </>
   )
 }
@@ -55,6 +94,7 @@ const styles = StyleSheet.create({
       alignItems: 'center',
       justifyContent: 'center',
       marginHorizontal: 10,
+      marginTop: 40,
     },
 });
 

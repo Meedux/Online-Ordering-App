@@ -11,7 +11,7 @@ const Items = ({ navigation }) => {
   const [ products, setProducts ] = useState([])
 
   useEffect(() => {
-    setProducts(filterProductsByCategory(route?.params.category.name))
+    setProducts(filterProductsByCategory(route?.params.id))
   }, [category])
 
   return (
@@ -31,7 +31,7 @@ const Items = ({ navigation }) => {
                     marginBottom: 10,
                     textAlign: 'center',
                 }}>
-                    {route?.params.category.name}
+                    {route?.params.name}
                 </Text>
                 <Card.Divider />
             </Card>
@@ -53,7 +53,7 @@ const Items = ({ navigation }) => {
                                   {product.name}
                               </Card.Title>
                               <Image source={{
-                                uri: product.img,
+                                uri: product?.img,
                               }} style={{
                                 width: 200,
                                 height: 200,
@@ -65,10 +65,10 @@ const Items = ({ navigation }) => {
                               color: 'green',
                               marginBottom: 10,
                             }}>
-                              {product.price}
+                              {product.selling_price}
                             </Text>
                             <Text>
-                              {product.short_description}                  
+                              {product.description}                  
                             </Text>
                     </Card>
                   </TouchableOpacity>

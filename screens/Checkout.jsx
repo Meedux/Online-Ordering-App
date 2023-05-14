@@ -12,11 +12,25 @@ import { checkout, auth, clearCart } from '../app/firebase';
 import * as ImagePicker from 'expo-image-picker';
 
 const Checkout = ({ navigation }) => {
-  const { totalPrice, orders, setOrders, setCart } = useContext(AppContext);
+  const { totalPrice, orders, setOrders, setCart, id } = useContext(AppContext);
   const [checked, setChecked] = useState(null);
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
+
+  const [fname, setFname] = useState(null);
+  const [lname, setLname] = useState(null);
+  const [email, setEmail] = useState(null);
+  const [phone, setPhone] = useState(null);
+  const [address1, setAddress1] = useState(null);
+  const [address2, setAddress2] = useState(null);
+  const [city, setCity] = useState(null);
+  const [state, setState] = useState(null);
+  const [country, setCountry] = useState(null);
+  const [pincode, setPincode] = useState(null);
   const [file, setFile] = useState(null);
+
+
+
+
+
 
   const handleChooseFile = async () => {
     try {
@@ -33,18 +47,30 @@ const Checkout = ({ navigation }) => {
   };
 
   const handleCheckout = () => {
+    // get four random numbers between 1000 to 9999
+    const trackingNumber = Math.floor(1000 + Math.random() * 9000);
     const order = {
-      name,
-      email,
-      paymentMethod: checked === 0 ? 'BPI' : 'Gcash',
+      user_id: String(id),
+      fname: fname,
+      lname: lname,
+      email: email,
+      phone: phone,
+      address1: address1,
+      address2: address2,
+      city: city,
+      state: state,
+      country: country,
+      pincode: pincode,
+      status: "Order Placed",
+      terms: 1,
+      total_price: totalPrice,
+      trackingNumber: `WHEY${trackingNumber}`,
+      payment_method: checked === 0 ? 'BPI' : 'Gcash'
     };
-
-    if (name && email && file) {
-      checkout(auth.currentUser.uid, orders, setOrders, order, file);
-      clearCart(auth.currentUser.uid, setCart);
-
+    console.log(order)
+    if (fname !== null && lname !== null && email !== null && phone !== null && address1 !== null && address2 !== null && city !== null && state !== null && country !== null && pincode !== null && checked !== null) {
+      checkout(id, orders, setOrders, order, file, setCart);
       // Clear the states
-      setName('');
       setEmail('');
       setFile(null);
       setChecked(null);
@@ -82,8 +108,15 @@ const Checkout = ({ navigation }) => {
 
           <View style={{ paddingHorizontal: 16 }}>
             <Input
-              placeholder="Name"
-              onChange={(e) => setName(e.nativeEvent.text)}
+              placeholder="First Name"
+              onChange={(e) => setFname(e.nativeEvent.text)}
+              leftIcon={<Icon name="user" type="font-awesome-5" size={20} />}
+              style={{ marginBottom: 16 }}
+            />
+
+            <Input
+              placeholder="Last Name"
+              onChange={(e) => setLname(e.nativeEvent.text)}
               leftIcon={<Icon name="user" type="font-awesome-5" size={20} />}
               style={{ marginBottom: 16 }}
             />
@@ -94,6 +127,57 @@ const Checkout = ({ navigation }) => {
               leftIcon={<Icon name="email" size={20} />}
               style={{ marginBottom: 16 }}
             />
+
+            <Input
+              placeholder="Phone"
+              onChange={(e) => setPhone(e.nativeEvent.text)}
+              leftIcon={<Icon name="phone" size={20} />}
+              style={{ marginBottom: 16 }}
+            />
+
+            <Input
+              placeholder="Address 1"
+              onChange={(e) => setAddress1(e.nativeEvent.text)}
+              leftIcon={<Icon name="map-marker" size={20} />}
+              style={{ marginBottom: 16 }}
+            />
+
+            <Input  
+              placeholder="Address 2"
+              onChange={(e) => setAddress2(e.nativeEvent.text)}
+              leftIcon={<Icon name="map-marker" size={20} />}
+              style={{ marginBottom: 16 }}
+            />
+
+            <Input
+              placeholder="City"
+              onChange={(e) => setCity(e.nativeEvent.text)}
+              leftIcon={<Icon name="map-marker" size={20} />}
+              style={{ marginBottom: 16 }}
+            />
+
+            <Input
+              placeholder="State"
+              onChange={(e) => setState(e.nativeEvent.text)}
+              leftIcon={<Icon name="map-marker" size={20} />}
+              style={{ marginBottom: 16 }}
+            />
+
+            <Input
+              placeholder="Country"
+              onChange={(e) => setCountry(e.nativeEvent.text)}
+              leftIcon={<Icon name="map-marker" size={20} />}
+              style={{ marginBottom: 16 }}
+            />
+
+            <Input
+              placeholder="Pincode"
+              onChange={(e) => setPincode(e.nativeEvent.text)}
+              leftIcon={<Icon name="map-marker" size={20} />}
+              style={{ marginBottom: 16 }}
+            />
+
+
 
             <Text style={{ marginBottom: 8 }}>Payment Method</Text>
 

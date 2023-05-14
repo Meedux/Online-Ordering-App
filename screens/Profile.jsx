@@ -1,16 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { Text, View, ScrollView, StyleSheet } from 'react-native';
 import { Button, Card, Divider, Avatar } from 'react-native-paper';
-import { logout, auth, getCurrentUserById } from '../app/firebase';
+import { logout, auth, getCurrentUserById, getUserIdByEmail } from '../app/firebase';
 import { useContext } from 'react';
 import { AppContext } from '../components/Context';
 
 const Profile = ({ navigation }) => {
   const [user, setUser] = useState({});
-  const { orders, cart } = useContext(AppContext);
+  const { orders, cart, id } = useContext(AppContext);
 
   useEffect(() => {
-    getCurrentUserById(auth.currentUser.uid, setUser);
+    getCurrentUserById(id, setUser);
   }, []);
 
   return (
@@ -24,8 +24,8 @@ const Profile = ({ navigation }) => {
           />
           <Divider />
           <Card.Title
-            title={user.name}
-            subtitle={user.email}
+            title={user?.name}
+            subtitle={user?.email}
             left={(props) => <Avatar.Icon {...props} icon="account" style={{ backgroundColor: '#2089DC' }}/>}
             style={styles.cardTitle}
           />

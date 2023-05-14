@@ -1,7 +1,9 @@
-import { initializeApp } from "firebase/app";
+import axios from "axios";
+import { initializeApp } from "firebase/app"
 
 import {
-  getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged
+  getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, 
+  onAuthStateChanged, sendEmailVerification
 } from "firebase/auth";
 
 import {
@@ -9,7 +11,7 @@ import {
 } from 'firebase/firestore'
 
 import {
-  getStorage, ref, getDownloadURL, uploadBytes
+  getStorage, ref, getDownloadURL, uploadBytes, connectStorageEmulator
 } from 'firebase/storage'
 
 const firebaseConfig = {
@@ -46,312 +48,377 @@ export const getAllCategories = async (setCategories) => {
   setCategories(categories);
 }
 
-export const getAllOrdersById = async (id) => {
-  const querySnapshot = await getDocs(ordersRef);
-  const orders = [];
+// export const getAllOrdersById = async (id) => {
+//   const querySnapshot = await getDocs(ordersRef);
+//   const orders = [];
 
-  querySnapshot.forEach((doc) => {
-    if (doc.data().userId === id) {
-      orders.push(doc.data());
-    }
-  });
+//   querySnapshot.forEach((doc) => {
+//     if (doc.data().userId === id) {
+//       orders.push(doc.data());
+//     }
+//   });
 
-  return orders;
+//   return orders;
+// }
+
+export const removeFromCart = (userId, prodId, setCart, cart, price, setPrice, totalPrice) => {
+  axios.delete(`https://wheyfactoryph.shop/api/carts/${userId}/${prodId}`)
+  .then((response) => {
+    alert(response.data.message);
+    const newCart = cart.filter((item) => item.id !== prodId);
+    setCart(newCart);
+    setPrice(Number(totalPrice) - price);
+  })
+  .catch((error) => {
+    alert(error);
+  })
 }
 
-export const removeFromCart = async (id, product, setCart) => {
-  const querySnapshot = await getDocs(usersRef);
-  const user = {};
-  let userRef = null;
-
-  querySnapshot.forEach((doc) => {
-    if (doc.data().id === id) {
-      userRef = doc.ref;
-      user.uid = doc.id;
-      user.id = doc.data().id;
-      user.name = doc.data().name;
-      user.email = doc.data().email;
-      user.cart = doc.data().cart;
-    }
-  });
-
-  const index = user.cart.findIndex((item) => item.id === product.id);
-  user.cart.splice(index, 1);
-
-  await updateDoc(userRef, user);
-  setCart(user.cart);
-  alert(`${product.name} removed from cart!`)
-}
-
-export const addToCart = async (id, product) => {
-
-  const querySnapshot = await getDocs(usersRef);
-  const user = {};
-  let userRef = null;
-  
-  querySnapshot.forEach((doc) => {
-    if (doc.data().id === id) {
-      userRef = doc.ref;
-      user.uid = doc.id;
-      user.id = doc.data().id;
-      user.name = doc.data().name;
-      user.email = doc.data().email;
-      user.cart = doc.data().cart;
-    }
-  });
-
-  user.cart.push(product);
-  await updateDoc(userRef, user);
-  alert(`${product.name} added to cart!`)
-
-}
-
-export const getTotalPriceFromUserCart = async (id, setTotalPrice) => {
-  const querySnapshot = await getDocs(usersRef);
-  const user = {};
-  let userRef = null;
-
-  querySnapshot.forEach((doc) => {
-    if (doc.data().id === id) {
-      userRef = doc.ref;
-      user.uid = doc.id;
-      user.id = doc.data().id;
-      user.name = doc.data().name;
-      user.email = doc.data().email;
-      user.cart = doc.data().cart;
-    }
-  });
-
-  let totalPrice = 0;
-
-  user.cart.forEach((item) => {
-    totalPrice += item.price;
-  });
-
-  setTotalPrice(totalPrice);
-}
-
-export const clearCart = async (id, setCart) => {
-  const querySnapshot = await getDocs(usersRef);
-  const user = {};
-  let userRef = null;
-
-  querySnapshot.forEach((doc) => {
-    if (doc.data().id === id) {
-      userRef = doc.ref;
-      user.uid = doc.id;
-      user.id = doc.data().id;
-      user.name = doc.data().name;
-      user.email = doc.data().email;
-      user.cart = doc.data().cart;
-    }
-  });
-
-  user.cart = [];
-  await updateDoc(userRef, user);
-  setCart(user.cart);
-}
-
-export const getCartItems = async (id, setCart) => {
-  const querySnapshot = await getDocs(usersRef);
-  const user = {};
-
-  querySnapshot.forEach((doc) => {
-    if (doc.data().id === id) {
-      user.id = doc.data().id;
-      user.name = doc.data().name;
-      user.email = doc.data().email;
-      user.cart = doc.data().cart;
-    }
-
-    setCart(user.cart);
-  });
-}
-
-export const checkout = async (id, orders, setOrders, order, file) => {
-  // Get user id then check if the cart is empty or not
-  const querySnapshot = await getDocs(usersRef);
-  const user = {};
-  let userRef = null;
-
-  querySnapshot.forEach((doc) => {
-    if (doc.data().id === id) {
-      userRef = doc.ref;
-      user.uid = doc.id;
-      user.id = doc.data().id;
-      user.name = doc.data().name;
-      user.email = doc.data().email;
-      user.cart = doc.data().cart;
-    }
-  });
-
-  if (user.cart.length === 0) {
-    alert('Your cart is empty!');
-    return;
-  }
-
-  // Get the current date
-  const date = new Date();
-  const day = date.getDate();
-  const month = date.getMonth() + 1;
-  const year = date.getFullYear();
-
-  const today = `${month}/${day}/${year}`;
-
-  // Create a new order
-  // const order = {
-  //   userId: user.id,
-  //   date: today,
-  //   products: user.cart,
-  //   totalPrice: 0,
-  // }
-
-
-
-  order.userId = user.id;
-  order.date = today;
-  order.products = user.cart;
-  order.totalPrice = 0;
-  order.status = 'pending';
-
-  // Calculate the total price
-  user.cart.forEach((item) => {
-    order.totalPrice += item.price;
-  });
-  
-
-  // Add the order to the orders collection
-  await addDoc(ordersRef, order);
-
-  // Update the orders context
-  setOrders([...orders, order]);
-
-  // Clear the cart
-  user.cart = [];
-  await updateDoc(userRef, user);
-
-
-  // get the order id
-  const querySnapshot2 = await getDocs(ordersRef);
-  let orderId = null;
-
-  querySnapshot2.forEach((doc) => {
-    if (doc.data().userId === user.id) {
-      orderId = doc.id;
-    }
-  });
-
-
-  const uri = await fetch(file.assets[0].uri);
-  const blob = await uri.blob();
-
-
-  const metadata = {
-    contentType: 'image/jpeg',
-  };
-
-  // Upload the file
-  const storageRef = ref(storage, `orders/${orderId}.jpg`);
-  await uploadBytes(storageRef, blob, metadata);
-  alert('Successfully Ordered! now awaiting confirmation');
-
-  // Get the image url and update the new order with the imgURL field
-  const url = await getDownloadURL(storageRef);
-  await updateDoc(doc(ordersRef, orderId), {
-    imgURL: url,
-  });
-
-}
-
-export const getOrdersById = async (id, setOrders, setPrice) => {
-  const querySnapshot = await getDocs(ordersRef);
-  const orders = [];
-
-  querySnapshot.forEach((doc) => {
-    if (doc.data().userId === id) {
-      orders.push(doc.data());
-    }
-  });
-  
-  let totalPrice = 0;
-
-  orders.forEach((order) => {
-    order.products.forEach((product) => {
-      totalPrice += product.price;
+export const addToCart =  (name, product, setPrice, totalPrice, price) => {
+  axios.post('https://wheyfactoryph.shop/api/addtocart', product)
+    .then((response) => {
+      alert(`${name} added to cart!`)
+      setPrice(Number(totalPrice) + price);
+    })
+    .catch((error) => {
+      alert(error.message)
     });
-  });
 
-  setPrice(totalPrice);
-  setOrders(orders);
+}
+
+// export const getTotalPriceFromUserCart = async (id, setTotalPrice) => {
+//   const querySnapshot = await getDocs(usersRef);
+//   const user = {};
+//   let userRef = null;
+
+//   querySnapshot.forEach((doc) => {
+//     if (doc.data().id === id) {
+//       userRef = doc.ref;
+//       user.uid = doc.id;
+//       user.id = doc.data().id;
+//       user.name = doc.data().name;
+//       user.email = doc.data().email;
+//       user.cart = doc.data().cart;
+//     }
+//   });
+
+//   let totalPrice = 0;
+
+//   user.cart.forEach((item) => {
+//     totalPrice += item.price;
+//   });
+
+//   setTotalPrice(totalPrice);
+// }
+
+// export const clearCart = async (id, setCart) => {
+//   const querySnapshot = await getDocs(usersRef);
+//   const user = {};
+//   let userRef = null;
+
+//   querySnapshot.forEach((doc) => {
+//     if (doc.data().id === id) {
+//       userRef = doc.ref;
+//       user.uid = doc.id;
+//       user.id = doc.data().id;
+//       user.name = doc.data().name;
+//       user.email = doc.data().email;
+//       user.cart = doc.data().cart;
+//     }
+//   });
+
+//   user.cart = [];
+//   await updateDoc(userRef, user);
+//   setCart(user.cart);
+// }
+
+export const getCartItems = (id, setCart, setPrice) => {
+  // Fetch the Cart items from the api
+  axios.get('https://wheyfactoryph.shop/api/viewCart')
+    .then((response) => {
+      const cartData = response.data.data;
+
+      const user = []
+
+      cartData.forEach((item) => {
+        if (Number(item.user_id) === id) {
+          user.push(item);
+        }
+      });
+      
+      //Get All of the Products
+      axios.get('https://wheyfactoryph.shop/api/products')
+      .then((response) => {
+        const product = response.data.data;
+
+        // Get the Products
+        const cartItems = [];
+
+
+        product.forEach((item) => {
+          user.forEach((cartItem) => {
+            if (Number(cartItem.prod_id) === Number(item.id)) {
+              item.qty = cartItem.prod_qty;
+              cartItems.push(item);
+            }
+          });
+        });
+
+        // Set the Cart Items
+        setCart(cartItems);
+
+        // Get the Total Price
+        let totalPrice = 0;
+
+        cartItems.forEach((item) => {
+          totalPrice += Number(item.selling_price) * Number(item.qty);
+        }
+        );
+        setPrice(totalPrice);
+
+        
+      })
+      .catch((error) => {
+        alert(error.message)
+      })
+
+      
+    })
+    .catch((error) => {
+      alert(error.message)
+    })
+}
+
+export const checkout = (id, orders, setOrders, order, file, setCart) => {
+  // upload the file
+  const uploadTask = uploadBytes(storageRef, file);
+
+  uploadTask.then((snapshot) => {
+    alert('Uploaded Successfully!');
+    getDownloadURL(snapshot.ref).then((url) => {
+      order.image = url;
+      axios.post('https://wheyfactoryph.shop/api/placeOrder-details', order)
+        .then((response) => {
+          setOrders([...orders, order]);
+          setCart([]);
+        })
+        .catch((error) => {
+          alert(error.message);
+        })
+    })
+  })
+
+  uploadTask.catch((error) => {
+    alert(error.message);
+  })
+
+
+}
+
+export const getOrdersById = (id, setOrders, setPrice) => {
+  axios.get('https://wheyfactoryph.shop/api/myOrders')
+    .then((orders) => {
+      const ordersData = orders.data.data;  
+
+      const userOrders = [];
+
+      ordersData.forEach((order) => {
+        if(Number(order.user_id) == id){
+          userOrders.push(order);
+        }
+      })
+
+      setOrders(userOrders);
+    })
+    .catch((error) => {
+      alert(error)
+    })
+
 }
 
 export const getCurrentUserById = async (id, setUser) => {
-  const querySnapshot = await getDocs(usersRef);
-  const user = {};
-  
-  querySnapshot.forEach((doc) => {
-    if (doc.data().id === id) {
-      user.id = doc.data().id;
-      user.name = doc.data().name;
-      user.email = doc.data().email;
+  const response = await axios.get('https://wheyfactoryph.shop/api/users')
+
+  const api_users = response.data.data;
+  api_users.forEach((user) => {
+    if (user.id === id) {
+      setUser(user);
     }
-  });
-
-  setUser(user);
+  })
 }
 
-export const getAllProducts = async (setProducts) => {
-  const querySnapshot = await getDocs(productsRef);
-  const products = [];
+export const getAllProducts = (setProducts) => {
+  // Fetch the Products from the api
+  axios.get('https://wheyfactoryph.shop/api/products')
+    .then((response) => {
+      const products = response.data.data;
+      setProducts(products);
+    }
+    )
+    .catch((error) => {
+      alert(error.message)
+    })
 
-  querySnapshot.forEach((doc) => {
-    products.push({id: doc.id, ...doc.data()});
-  });
-
-  setProducts(products);
 }
 
 
-export const register = (name, email, password) => {
+export const getUserIdByEmail = (email, setId) => {
+  axios.get('https://wheyfactoryph.shop/api/users')
+  .then((response) => {
+    const api_users = response.data.data;
 
-  createUserWithEmailAndPassword(auth, email, password)
-    .then((userCredential) => {
-      const user = {
-        id: userCredential.user.uid,
-        name: name,
-        email: email,
-        cart: [],
+    // loop over the users to check if the email is existing and if it is, get the id 
+    let id = null;
+    api_users.forEach((user) => {
+      if (user.email === email) {
+        setId(user.id);
       }
+    });
+    
+  })
+  .catch((error) => {
+    alert(error.message)
+  });
+}
 
-      // create the user in the users collection
-      addDoc(usersRef, user)
-        .then((docRef) => {
-          // console.log("Document written with ID: ", docRef.id);
-          updateDoc(docRef, {uid: docRef.id})
+export const register = (user, navigation, setEmail) => {
+  createUserWithEmailAndPassword(auth, user.email, user.password)
+  .then((userCredential) => {
+    // Signed in 
+    setEmail(user.email);
+
+    // register it within the api and nest the addDoc function inside the then block
+    axios.post("https://wheyfactoryph.shop/api/register", user)
+    .then((response) => {
+      // get the new user from the api
+
+      axios.get('https://wheyfactoryph.shop/api/users')
+      .then((res) => {
+        const api_users = res.data.data;
+
+        // loop over the users to check if the email is existing and if it is, get the id 
+        let newUser = null;
+        api_users.forEach((userr) => {
+          if (userr.email === user.email) {
+            newUser = userr;
+          }
+        });
+
+
+
+        // add the user to the firestore
+        addDoc(usersRef, newUser)
+        .then(() => {
+          // navigate to the home screen
+          navigation.navigate('Home');
+        }
+        )
+        .catch((error) => {
+          alert(error);
+        }
+        )
+      })
+  })
+  .catch((error) => {
+    alert(error);
+  });
+    })
+    .catch((error) => {
+      alert(error);
+    });
+
+
+    
+}
+
+
+
+export const login = (email, password, navigation, setEmail) => {
+  axios.post('https://wheyfactoryph.shop/api/login', {email, password})
+    .then((response) => {
+      axios.get('https://wheyfactoryph.shop/api/users')
+      .then((res) => {
+        const api_users = res.data.data;
+  
+        // get ther users from the firebase firestore
+        const firebase_users = [];
+        getDocs(usersRef)
+        .then((querySnapshot) => {
+          querySnapshot.forEach((doc) => {
+            firebase_users.push(doc.data());
+          });
+
+          // loop over the firebase users list if the user exists
+          let userExists = false;
+          let user = null;
+  
+          firebase_users.forEach((firebase_user) => {
+            api_users.forEach((api_user) => {
+              if (firebase_user.email === api_user.email) {
+                userExists = true;
+                user = firebase_user;
+              }
+            });
+          });
+    
+    
+          if(userExists){
+            // if user exists
+            signInWithEmailAndPassword(auth, email, password)
+            .then((userCredential) => {
+              const user = userCredential.user;
+              setEmail(user.email);
+              navigation.navigate('Home');
+            })
+            .catch((error) => {
+              alert(error);
+            });
+          }else{
+            // if the user did not exist in the firebase db then create one
+            api_users.forEach((api_user) => {
+              if (api_user.email === email) {
+                // register the user in the firebase auth
+                createUserWithEmailAndPassword(auth, email, password)
+                .then((userCredential) => {
+                  // Signed in
+                   // add the user in the firebase db
+                    addDoc(usersRef, api_user)
+                    .then((res) => {
+                      updateDoc(doc(usersRef, res.id), {
+                        doc_id: userCredential.user.uid,
+                      });
+  
+                      setEmail(api_user.email);
+                      navigation.navigate('Home');
+                    })
+                    .catch((error) => {
+                      alert(error);
+                    });
+                })
+                .catch((error) => {
+                  alert(error);
+                });
+               
+              }
+            });
+          }
+
         })
         .catch((error) => {
-          // console.error("Error adding document: ", error);
-        }
-      );
-
+          alert(error);
+        });
+  
+  
+      }
+      )
+      .catch((error) => {
+        alert(error);
+      })
     })
     .catch((error) => {
-      const errorCode = error.code;
-      const errorMessage = error.message;
-      // ..
+      alert(error);
     });
-}
 
-
-export const login = (email, password) => {
-  signInWithEmailAndPassword(auth, email, password)
-    .then((userCredential) => {
-      // Signed in 
-    })
-    .catch((error) => {
-      const errorCode = error.code;
-      const errorMessage = error.message;
-    });
 }
 
 export const logout = (navigation) => {
